@@ -46,17 +46,20 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Messy sql test v1"),
+        title: const Text("Nested sqflite v2"),
       ),
       body: Column(
         children: [
-          TextField(
-            controller: _activityController,
-            decoration: InputDecoration(labelText: "New activity"),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _activityController,
+              decoration: InputDecoration(labelText: "New activity"),
+            ),
           ),
           ElevatedButton(
-            onPressed: () {
-              ActivityDbHelper.instance
+            onPressed: () async {
+              await ActivityDbHelper.instance
                   .add(Activity(name: _activityController.text));
               _activityController.text = "";
               setState(() {});
@@ -80,8 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       return Card(
                         child: ListTile(
                           title: Text(activity.name),
-                          onLongPress: () {
-                            ActivityDbHelper.instance.delete(activity.id!);
+                          onLongPress: () async {
+                            await ActivityDbHelper.instance.delete(activity.id!);
                             setState(() {});
                           },
                           onTap: () {

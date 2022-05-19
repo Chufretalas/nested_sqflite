@@ -5,7 +5,7 @@ import 'package:nested_sqflite/date_db_helper.dart';
 import 'date_form.dart';
 
 class DateView extends StatefulWidget {
-  Activity activity;
+  final Activity activity;
 
   DateView(this.activity);
 
@@ -25,7 +25,7 @@ class _DateViewState extends State<DateView> {
           Expanded(
             child: FutureBuilder(
               future: DateDbHelper.instance
-                  .getDateTimes(widget.activity.dateTableName),
+                  .getDatesList(widget.activity.dateTableName),
               builder: (context, snapshot) {
                 switch (snapshot.connectionState) {
                   case ConnectionState.waiting:
@@ -44,8 +44,8 @@ class _DateViewState extends State<DateView> {
                           child: ListTile(
                             title: Text(
                                 "${date.year}, ${date.month}, ${date.day}"),
-                            onLongPress: () {
-                              DateDbHelper.instance.delete(
+                            onLongPress: () async {
+                              await DateDbHelper.instance.delete(
                                   dateTime: date,
                                   dateTableName: widget.activity.dateTableName);
                               setState(() {});

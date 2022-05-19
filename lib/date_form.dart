@@ -7,9 +7,9 @@ class DateForm extends StatelessWidget {
 
   DateForm({required this.activity});
 
-  TextEditingController _yearController = TextEditingController();
-  TextEditingController _monthController = TextEditingController();
-  TextEditingController _dayController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _monthController = TextEditingController();
+  final TextEditingController _dayController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class DateForm extends StatelessWidget {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    DateDbHelper.instance.add(
+                    DateDbHelper.instance.addDate(
                         dateTableName: activity.dateTableName,
                         dateTime: DateTime.now());
                     Navigator.of(context).pop();
@@ -44,7 +44,7 @@ class DateForm extends StatelessWidget {
                   child: Text("Now")),
               ElevatedButton(
                   onPressed: () {
-                    DateDbHelper.instance.add(
+                    DateDbHelper.instance.addDate(
                         dateTableName: activity.dateTableName,
                         dateTime: DateTime.utc(
                           int.tryParse(_yearController.text)!,

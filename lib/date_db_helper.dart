@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -7,27 +8,29 @@ class DateDbHelper {
 
   static final DateDbHelper instance = DateDbHelper.privateConstructor();
 
-  static late String table;
+  Future<Database> get database async => _database ??= await _initDatabase();
+  static Database? _database;
+
   static const String tableId = 'id';
   static const String tableYear = 'year';
   static const String tableMonth = 'month';
   static const String tableDay = 'day';
 
-  Future<Database> initDatabase(String dateTableName) async {
-    debugPrint("Starting: $dateTableName");
-    table = dateTableName;
+  Future<Database> _initDatabase() async {
+    debugPrint("Starting dates.db");
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, '$table.db');
+    final path = join(dbPath, 'dates.db');
     return await openDatabase(
       path,
       version: 1,
-      onCreate: _onCreate,
     );
   }
 
-  Future _onCreate(Database db, int version) async {
+  Future createTable({required String dateTableName}) async {
+    Database db = await instance.database;
+    debugPrint("Creating $dateTableName");
     await db.execute('''
-      CREATE TABLE $table(
+      CREATE TABLE $dateTableName(
         $tableId INTEGER PRIMARY KEY,
         $tableYear INTEGER,
         $tableMonth INTEGER,
@@ -35,20 +38,28 @@ class DateDbHelper {
       )
     ''');
   }
-  
+
+  //Not being used right now, but I will leave it here for future reference
   Future<void> clearTable({required String dateTableName}) async {
     debugPrint("Clearing $dateTableName");
-    Database db = await initDatabase(dateTableName);
+    Database db = await instance.database;
     db.execute("DELETE FROM $dateTableName");
     db.execute("VACUUM");
     debugPrint("$dateTableName was cleared");
   }
 
-  Future<int> add(
+  Future<void> dropTable({required String dateTableName}) async {
+    debugPrint("Dropping $dateTableName");
+    Database db = await instance.database;
+    db.execute("DROP TABLE IF EXISTS $dateTableName");
+    debugPrint("$dateTableName was dropped");
+  }
+
+  Future<int> addDate(
       {required String dateTableName, required DateTime dateTime}) async {
-    Database db = await initDatabase(dateTableName);
+    Database db = await instance.database;
     return await db.insert(
-      table,
+      dateTableName,
       {
         DateDbHelper.tableId: null,
         DateDbHelper.tableYear: dateTime.year,
@@ -59,11 +70,12 @@ class DateDbHelper {
     );
   }
 
+  // Searches the table for a matching DateTime and deletes it if found
   Future<int> delete(
       {required String dateTableName, required DateTime dateTime}) async {
-    Database db = await initDatabase(dateTableName);
-    List<Map<String, dynamic>> maps = await _getDates(dateTableName);
-    int id = 0;
+    Database db = await instance.database;
+    List<Map<String, dynamic>> maps = await db.query(dateTableName);
+    int? id;
     for (Map<String, dynamic> map in maps) {
       if (map[tableYear] == dateTime.year &&
           map[tableMonth] == dateTime.month &&
@@ -72,18 +84,19 @@ class DateDbHelper {
         break;
       }
     }
-    return await db.delete(table, where: 'id = ?', whereArgs: [id]);
+    if (id != null) {
+      debugPrint("Deleting date from table");
+      return await db.delete(dateTableName, where: 'id = ?', whereArgs: [id]);
+    } else {
+      debugPrint("Date not found in table, unable to delete");
+      return 0;
+    }
   }
 
-  Future<List<Map<String, dynamic>>> _getDates(String dateTableName) async {
-    Database db = await initDatabase(dateTableName);
-    final List<Map<String, dynamic>> maps = await db.query(table);
-    return maps;
-  }
-
-  Future<List<DateTime>> getDateTimes(String dateTableName) async {
-    Database db = await initDatabase(dateTableName);
-    final List<Map<String, dynamic>> maps = await db.query(table);
+  // Return all dates from a table as a list of DateTime
+  Future<List<DateTime>> getDatesList(String dateTableName) async {
+    Database db = await instance.database;
+    final List<Map<String, dynamic>> maps = await db.query(dateTableName);
     return List.generate(maps.length, (i) {
       return DateTime.utc(
         maps[i][tableYear],

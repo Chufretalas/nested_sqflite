@@ -22,12 +22,4 @@ class Activity {
       ActivityDbHelper.dateTableName: dateTableName,
     };
   }
-  // TODO: delete these, or not, maybe, I don't know
-  // void addDate(DateTime dateTime) {
-  //   DateDbHelper.instance.add(this.dateTableName, dateTime);
-  // }
-  //
-  // void deleteDate(DateTime dateTime) {
-  //   DateDbHelper.instance.add(this.dateTableName, dateTime);
-  // }
 }
